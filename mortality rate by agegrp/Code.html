@@ -1,0 +1,46 @@
+#load dataset, remove column X, rename the columns
+mal_death_age<- read.csv(file = "malaria_deaths_age.csv",  header = T, sep = ",",stringsAsFactors=FALSE) %>%
+  select(-(X)) %>%
+  rename(Entity = 'entity', Code = 'code', Year = 'year')
+
+#Recode missingness
+mal_death_age <- mal_death_age %>%
+  mutate_all(~ifelse(. %in% c(""), NA, .))
+  
+#filtering for rows without code names
+Region3 <- mal_death_age %>% filter(is.na(Code))
+
+#filter for only distinct regions in Sub-Saharan Africa from year 2000 onwards, arranged by decreasing number of deaths
+death_by_age <- Region3 %>%
+  filter(between(Year, 2000, current_year) & grepl("Sub-Saharan Africa", Entity) & (!(Entity=="Sub-Saharan Africa"))) %>%
+  arrange(desc(deaths))
+
+#To convert deaths per age group into proportions
+#get total sum of death for each Entity and Year across all age_group
+sums <- aggregate(deaths ~ Entity + Year, data = death_by_age, FUN=sum, na.rm = T)
+
+#rename the column for total sum of death to total_deaths, join back to the dataset on Entity and Year, remove Code column 
+        and get the proportion of the deaths in each age group from total sum of death for each Entity and Year
+death_by_age <- sums %>%
+  rename(total_deaths = deaths) %>%
+  left_join(death_by_age, sums, by = c("Entity","Year")) %>%
+  select(-(Code)) %>%
+  mutate(prop_death = deaths/total_deaths*100)
+
+#specifying ordered category in age group, from youngest to oldest
+death_by_age$age_group = factor(death_by_age$age_group, order = TRUE, levels = c("Under 5","5-14","15-49","50-69", "70 or older"))
+
+#storing latest year available in the dataset as numeric
+latest_year <- as.numeric(max(death_by_age$Year)) 
+
+#removing string that is repeated in every row of Entity column without replacing 
+death_by_age$Entity <- gsub("Sub-Saharan Africa","",death_by_age$Entity) 
+
+#stacked bar plots of proportion of deaths for each age group in distinct Sub-Saharan Africa regions for latest year and the year before
+death_by_age %>%
+  filter(Year == latest_year| Year == latest_year-1) %>%
+  ggplot(aes(x = Entity, y = prop_death, fill = age_group)) + 
+  geom_bar(stat = "identity") +
+  labs(x = "Sub-Saharan African regions", y = "% of total death", title = paste0("Proportion of death for distinct Sub-Saharan Africa regions by age group for ","\n",latest_year-1," and ",latest_year)) +
+  guides(fill = guide_legend("age group")) + 
+  facet_wrap(~Year)
