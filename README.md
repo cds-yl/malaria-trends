@@ -1,4 +1,4 @@
-# Epidemiological investigation on malaria
+# The Malaria Project
 
 ## Overview
 This project was created to understand global trends of malaria using 2000 - 2016 data. 
