@@ -10,6 +10,9 @@ mal_death_age <- mal_death_age %>%
 #filtering for rows without code names
 Region3 <- mal_death_age %>% filter(is.na(Code))
 
+#storing current year value as numeric
+current_year <- as.numeric(year(now())) 
+  
 #filter for only distinct regions in Sub-Saharan Africa from year 2000 onwards, arranged by decreasing number of deaths
 death_by_age <- Region3 %>%
   filter(between(Year, 2000, current_year) & grepl("Sub-Saharan Africa", Entity) & (!(Entity=="Sub-Saharan Africa"))) %>%
