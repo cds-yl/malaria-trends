@@ -1,6 +1,6 @@
 # malaria-trends
 
-#Overview
+# Overview
 This project was created to understand global trends of malaria using 2018 data. 
 Trends on mortality rate and incidence rate of new cases over time were visualised.
 
