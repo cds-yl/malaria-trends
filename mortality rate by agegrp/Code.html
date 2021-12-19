@@ -23,7 +23,7 @@ death_by_age <- Region3 %>%
 sums <- aggregate(deaths ~ Entity + Year, data = death_by_age, FUN=sum, na.rm = T)
 
 #rename the column for total sum of death to total_deaths, join back to the dataset on Entity and Year, remove Code column 
-        and get the proportion of the deaths in each age group from total sum of death for each Entity and Year
+# and get the proportion of the deaths in each age group from total sum of death for each Entity and Year
 death_by_age <- sums %>%
   rename(total_deaths = deaths) %>%
   left_join(death_by_age, sums, by = c("Entity","Year")) %>%
