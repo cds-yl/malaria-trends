@@ -10,6 +10,9 @@ mal_inc_country <- mal_inc_country %>%
 
 #filtering for rows without code names
 Region2 <- mal_inc_country %>% filter(is.na(Code))
+  
+#storing current year value as numeric
+current_year <- as.numeric(year(now())) 
 
 #To filter for income data from year 2000 onwards, arranged on decreasing incidence rate
 incident_by_income <- Region2 %>%
