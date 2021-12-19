@@ -1,0 +1,36 @@
+#Code for visualisation
+
+#load dataset, rename fourth column to a shorter name
+mal_inc_country<- read.csv(file = "malaria_inc.csv", header = T, sep = ",",stringsAsFactors=FALSE)
+colnames(mal_inc_country)[4] <- 'incidence per 1k at risk'
+
+#Recode missingness
+mal_inc_country <- mal_inc_country %>%
+  mutate_all(~ifelse(. %in% c(""), NA, .))
+
+#filtering for rows without code names
+Region2 <- mal_inc_country %>% filter(is.na(Code))
+
+#To filter for income data from year 2000 onwards, arranged on decreasing incidence rate
+incident_by_income <- Region2 %>%
+  filter(between(Year, 2000, current_year) & grepl("income", Entity) & 
+           (Entity %in% c("Low income","Lower middle income","Middle income","Upper middle income"))) %>%
+  arrange(desc(`incidence per 1k at risk`))
+
+#specifying ordered category in Entity, from Low to High
+incident_by_income$Entity = factor(incident_by_income$Entity, order = TRUE, levels = c("Low income","Lower middle income","Middle income","Upper middle income"))
+
+#arranging rows according to the ordered category
+incident_by_income <- incident_by_income %>% arrange(Entity)
+
+#storing latest year value available in dataset
+latest_year <- as.numeric(max(incident_by_income$Year))
+
+#trend plot of income status with incidence rate per 1,000 at risk
+incident_by_income %>%
+  ggplot(aes(x = Year,y = `incidence per 1k at risk`, color= Entity, group = Entity)) + 
+  geom_point() + 
+  geom_line() +
+  labs(x = "Year", y = "Incidence rate per 1,000 at risk", title = paste("Incidence rate of Malaria by income from 2000 -",latest_year)) + 
+  scale_color_manual(values = c("#D55E00","#0072B2","#009E73","#56B4E9")) + 
+  guides(colour = guide_legend(title = "income status"))
