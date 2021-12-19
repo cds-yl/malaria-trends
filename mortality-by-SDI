@@ -1,0 +1,36 @@
+#load dataset, rename fourth column to a shorter name
+mal_death_country <- read.csv(file = "malaria_deaths.csv",  header = T, sep = ",",stringsAsFactors=FALSE)
+colnames(mal_death_country)[4] <- 'deaths per 100k' 
+
+#Recode missingness
+mal_death_country <- mal_death_country %>%
+  mutate_all(~ifelse(. %in% c(""), NA, .))
+  
+#filtering for Non-country-specific entities
+Region1 <- mal_death_country %>% filter(is.na(Code))
+
+##visualising mortality rate of each SDI group from 2000 to latest available year
+
+#storing current year value as numeric
+current_year <- as.numeric(year(now())) 
+
+#To filter for SDI data from year 2000 onwards, arranged on decreasing death rate
+death_by_SDI <- Region1 %>%
+  filter(between(Year, 2000, current_year) & grepl("SDI", Entity)) %>%
+  arrange(desc(`deaths per 100k`))
+
+#specifying ordered category in Entity, from High to Low
+death_by_SDI$Entity = factor(death_by_SDI$Entity, order = TRUE, levels = c("High SDI", "High-middle SDI","Middle SDI","Low-middle SDI", "Low SDI")) 
+
+#arranging rows according to the ordered category
+death_by_SDI <- death_by_SDI %>% arrange(Entity) 
+
+#storing latest year value available in dataset as numeric
+latest_year <- as.numeric(max(death_by_SDI$Year)) 
+
+#trend plot of SDI status with death rate per 100,000
+death_by_SDI %>%
+  ggplot(aes(x = Year,y = `deaths per 100k`, color= Entity, group = Entity)) + geom_point() + geom_line() +
+  labs(x = "Year", y = "Death rate per 100,000 (age-standardised rates)", title = paste("Mortality rate of Malaria by Socio-demographic Index (SDI) from 2000 -", latest_year)) +
+  scale_color_manual(values = c("#E69F00", "#56B4E9", "#009E73", "#0072B2", "#D55E00", "#CC79A7")) + 
+  guides(colour = guide_legend(reverse = TRUE, title = "SDI status"))
