@@ -1,0 +1,7 @@
+#load libraries
+library(tidyverse)
+library(lubridate)
+library(ggplot2)
+
+#remove scientific notation in numbers
+options(scipen = 999)
